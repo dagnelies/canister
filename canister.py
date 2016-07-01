@@ -80,7 +80,8 @@ def build(config_path):
     
     if auth_basic_username and auth_basic_password:
         log.info('Enabling basic authentication for: ' + auth_basic_username)
-        
+    
+    auth_jwt_client_id = config.get('auth_jwt', 'client_id', fallback=None)
     auth_jwt_secret = config.get('auth_jwt', 'secret', fallback=None)
     
     if auth_jwt_secret:
@@ -104,8 +105,8 @@ def build(config_path):
             else:
                 return None
             
-        elif auth_jwt_secret and tokens[0].lower() == 'bearer':
-            profile = jwt.decode(tokens[1], auth_jwt_secret)
+        elif auth_jwt_client_id and tokens[0].lower() == 'bearer':
+            profile = jwt.decode(tokens[1], auth_jwt_secret, audience=auth_jwt_client_id)
             return profile
         
     @can.hook('before_request')
@@ -114,7 +115,7 @@ def build(config_path):
         res = bottle.response
         
         # thread name = <ip>-....
-        threading.current_thread().name = can.remote_addr + '-....'
+        threading.current_thread().name = req.remote_addr + '-...'
         log.info(req.method + ' ' + req.url)
         
         can.session.id = None 
@@ -128,8 +129,8 @@ def build(config_path):
             res.set_cookie('session_id', can.session.id, secret=session_secret, httponly=True)
             sessions[can.session.id] = {}
             
-        # thread name = <ip>-<session_id[0:4]>
-        threading.current_thread().name = can.remote_addr + '-' + can.session.id[0-4]
+        # thread name = <ip>-<session_id[0:6]>
+        threading.current_thread().name = req.remote_addr + '-' + can.session.id[0:6]
         log.info('Session id: ' + can.session.id)
         
         # set data
@@ -142,7 +143,7 @@ def build(config_path):
                 user = getUser(auth)
                 can.session.user = user
                 if user:
-                    log.info('Logged in as: ' + user)
+                    log.info('Logged in as: ' + str(user))
             except Exception as ex:
                 log.warning('Authentication failed: ' + str(ex))
                 

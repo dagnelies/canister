@@ -10,6 +10,7 @@ import sys
 sys.path.insert(0, '..')
 import canister
 import time
+import bottle
 
 can = canister.build('cgevent.config')
 
