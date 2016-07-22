@@ -22,6 +22,8 @@ import inspect
 import time
 import math
 
+# this will contain id, user and data
+bottle.session = threading.local()
 
 class TimedDict(dict):
     def __init__(self):
@@ -130,8 +132,11 @@ def _buildAuthJWT(config):
     
     return validate
     
-    
+
+
 class SessionCache:
+    '''A thread safe session cache with a cleanup thread'''
+    
     def __init__(self, timeout=3600):
         self._lock = threading.Lock()
         self._cache = TimedDict()
@@ -154,28 +159,37 @@ class SessionCache:
         cleaner = threading.Thread(name="SessionCleaner", target=prune)
         cleaner.deamon=True
         cleaner.start()
+    
+    def __contains__(self, sid):
+        return sid in self._cache
+        
         
     def get(self, sid):
-        if not sid:
-            return None
-            
         with self._lock:
             if sid in self._cache:
                 return self._cache[sid]
             else:
-                return None
+                return (None, None)
     
-    def create(self):
-        sid = base64.b64encode(os.urandom(18)).decode('ascii')
-        data = {}
+    def set(self, sid, user, data):
+        assert sid
         with self._lock:
-            self._cache[sid] = data
+            self._cache[sid] = (user, data)
+            
+    
+    def create(self, user=None, data={}):
+        sid = base64.b64encode(os.urandom(18)).decode('ascii')
+        with self._lock:
+            self._cache[sid] = (user, data)
         
-        return (sid, data)
+        return (sid, user, data)
+    
     
     def delete(self, sid):
         with self._lock:
             del self._cache[sid]
+            
+            
             
 class Canister:
     name = 'canister'
@@ -210,6 +224,7 @@ class Canister:
         self.log = log
         app.log = log
         
+        
         timeout = int(config.get('canister.session_timeout', '3600'))
         self.sessions = SessionCache(timeout=timeout)
         self.session_secret = base64.b64encode(os.urandom(30)).decode('ascii')
@@ -242,22 +257,23 @@ class Canister:
             log.info(req.method + ' ' + req.url)
             
             # session
-            req.session_id = req.get_cookie('session_id', secret=self.session_secret)
-            req.session = self.sessions.get(req.session_id)
+            sid = req.get_cookie('session_id', secret=self.session_secret)
             
-            if req.session != None:
-                log.info('Session found: ' + req.session_id)
+            if sid and sid in self.sessions:
+                user, data = self.sessions.get(sid)
+                log.info('Session found: ' + sid)
             else:
-                req.session_id, req.session = self.sessions.create()
-                log.info('Session created: ' + req.session_id)
-                res.set_cookie('session_id', req.session_id, secret=self.session_secret)
-                
-            # thread name = <ip>-<session_id[0:6]>
-            threading.current_thread().name = req.remote_addr + '-' + req.session_id[0:6]
+                sid, user, data = self.sessions.create()
+                res.set_cookie('session_id', sid, secret=self.session_secret)
+                log.info('Session created: ' + sid)
             
+            bottle.session.sid = sid
+            bottle.session.data = data
+            
+            # thread name = <ip>-<session_id[0:6]>
+            threading.current_thread().name = req.remote_addr + '-' + sid[0:6]
             
             # user
-            req.user = None
             auth = req.headers.get('Authorization')
             if auth:
                 tokens = auth.split()
@@ -266,14 +282,18 @@ class Canister:
                     return None
                 
                 if self.auth_basic and tokens[0].lower() == 'basic':
-                    req.user = self.auth_basic( tokens[1] )
+                    user = self.auth_basic( tokens[1] )
                     
                 elif self.auth_jwt and tokens[0].lower() == 'bearer':
-                    req.user = self.auth_jwt( tokens[1] )
+                    user = self.auth_jwt( tokens[1] )
                     
-                if req.user:
-                    self.log.info('Logged in as: ' + str(req.user))
-        
+                if user:
+                    self.log.info('Logged in as: ' + str(user))
+                    self.sessions.set(sid, user, data)
+                    
+            bottle.session.user = user
+            
+            
             # args unpacking
             sig = inspect.getargspec(callback)
             
