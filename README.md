@@ -116,25 +116,3 @@ This can be seen in the logs `[149.172.44.162-VJ8zq5]` in order to be able to ea
 ### Authentication
 
 ### CORS
-
-### Security
-
-One of the common security flaws of web apps is Cross Site Request Forgery (https://en.wikipedia.org/wiki/Cross-site_request_forgery)
-
-Either:
-- provide auth-creditentials
-
-Or:
-- provide a HTTP-Only cookie containing your session ID (to prove your're authenticated and prevent XSS, done by the server)
-- and provide a session token as parameter or in a "X-Csrf-Token" header (to prove it comes from your Browser and prevent CSFR, must be done client side through javascript)
-
----
-
-Provide HTTP-Only cookie + check Referer Header.
-How does this prevent CSRF?
-- if the request doesn't come from the browser, the cookie/session-id is unknown
-- if it comes from the browser, we can ensure it comes from the site itself
- 
-...the only issue is in case the header is removed (because of a privacy proxy or plugin, but I think it's pretty seldom)
-
-...the issue is that any other method requires client side stuff in the page (through hidden fields, request parameters or setting specific headers through javascript)
