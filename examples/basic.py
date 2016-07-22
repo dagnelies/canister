@@ -4,7 +4,6 @@ import bottle
 import canister
 
 app = bottle.Bottle()
-app.config.load_config('example.config')
 app.install(canister.Canister())
 
 

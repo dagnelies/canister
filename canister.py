@@ -20,6 +20,7 @@ import jwt
 import hashlib
 import inspect
 import time
+import math
 
 
 class TimedDict(dict):
@@ -59,7 +60,9 @@ class TimedDict(dict):
         for (k, (t,val)) in self._items.items():
             if now - t < age:
                 survivors[k] = (t,val)
+        pruned = len(self._items) - len(survivors)
         self._items = survivors
+        return pruned
         
         
 
@@ -107,7 +110,7 @@ def _buildAuthBasic(config):
 def _buildAuthJWT(config):
     client_id = config.get('canister.auth_jwt_client_id', None)
     secret = config.get('canister.auth_jwt_secret', None)
-    encoding = config.get('canister.auth_jwt_encoding', 'clear').lower() # clear, base64, or base64url
+    encoding = config.get('canister.auth_jwt_encoding', 'clear').lower() # clear, base64std, or base64url
     
     if not client_id or not secret:
         return None
@@ -116,7 +119,11 @@ def _buildAuthJWT(config):
         secret = base64.standard_b64decode(secret)
     elif encoding == 'base64url': # with - and _
         secret = base64.urlsafe_b64decode(secret)
-
+    elif encoding == 'clear':
+        pass
+    else:
+        raise Exception('Invalid auth_jwt_encoding in config: "%s" (should be "clear", "base64std" or "base64url")' % encoding)
+        
     def validate(token):
         profile = jwt.decode(token, secret, audience=client_id)
         return profile
@@ -125,17 +132,24 @@ def _buildAuthJWT(config):
     
     
 class SessionCache:
-    def __init__(self, interval=60, max_age=3600, log=None):
+    def __init__(self, timeout=3600):
         self._lock = threading.Lock()
         self._cache = TimedDict()
+        log = logging.getLogger('canister')
+        
+        if timeout <= 0:
+            log.warn('Sessions kept indefinitely! (session timeout is <= 0)')
+            return
+        
+        interval = int(math.sqrt(timeout))
+        log.info('Session timeout is %d seconds. Checking for expired sessions every %d seconds. ' % (timeout, interval))
         
         def prune():
             while True:
                 time.sleep(interval)
                 with self._lock:
-                    n = self._cache.prune(max_age)
-                    if log:
-                        log.debug('%d expired sessions pruned' % n)
+                    n = self._cache.prune(timeout)
+                    log.debug('%d expired sessions pruned' % n)
             
         cleaner = threading.Thread(name="SessionCleaner", target=prune)
         cleaner.deamon=True
@@ -196,7 +210,8 @@ class Canister:
         self.log = log
         app.log = log
         
-        self.sessions = SessionCache()
+        timeout = int(config.get('canister.session_timeout', '3600'))
+        self.sessions = SessionCache(timeout=timeout)
         self.session_secret = base64.b64encode(os.urandom(30)).decode('ascii')
         
         self.auth_basic = _buildAuthBasic(config)
