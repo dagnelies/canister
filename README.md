@@ -180,15 +180,26 @@ session_timout = 3600
 
 Canister will automatically parse two kind of `Authorization` headers:
 - Basic authentication (for basic login/password)
-- Bearer token authentication (for OAuth2)
+- JWT / Bearer token authentication (for OAuth2)
 
 See the example configuration above to see how it is configured.
 
-
+The user will then be available in `canister.session.user` for the duration of the session.
+In case of basic authentication, `user` will be the username.
+If it is JWT authentication, `user` will contain the profile with the requested attributes.
 
 ### CORS
 
 If you have REST APIs, enabling CORS can be quite useful.
+
+```ini
+[canister]
+
+# applies CORS to responses, write * to allow AJAX requests from anywhere
+CORS = *
+```
+
+If enabled through the config, they will be applied to ***all*** responses!
 
 ### Security ABC
 
