@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0, '..')
 import bottle
 import canister
-from bottle import session
+from canister import session
 
 app = bottle.Bottle()
 app.install(canister.Canister())

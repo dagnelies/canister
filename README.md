@@ -13,10 +13,10 @@ Canister is a simple plugin for bottle, providing:
 
 ### Usage
 
-```
+```python
 import bottle
 import canister
-from bottle import session
+from canister import session
 
 app = bottle.Bottle()
 app.install(canister.Canister())
@@ -43,7 +43,7 @@ app.run()
 
 ### Sample config file
 
-```
+```ini
 [canister]
 
 # The logs directory
@@ -94,7 +94,7 @@ If not otherwise configured, logs will be written in the `logs` directory. They 
 2016-07-02 09:38:33,217 INFO     [149.172.44.162-VJ8zq5]   Response: 200 (1ms)
 ```
 
-You will get one such log file each day, like `log.2016-07-02`.
+You will get one such log file each day, like `log.2016-07-02`, for the last `30` days.
 
 You can also log messages in your code like this:
 ```
@@ -108,11 +108,90 @@ The logging uses the common `logging` module and is thread safe.
 When serving requests, the corresponding thread also gets renamed according to the client IP and the start of its session ID.
 This can be seen in the logs `[149.172.44.162-VJ8zq5]` in order to be able to easely follow client-server "discussions" over a longer timespan.
 
+You can also tweak logging settings in the config:
+
+```ini
+[canister]
+
+# The logs directory
+log_path = ./logs/
+
+# Logging levels: DISABLED, DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_level = INFO
+
+# Log older than that will be deleted
+log_days = 30
+```
+
 ### URL and form params unpacking
+
+Using canister, all URL parameters and form POST parameters are automatically unpacked.
+
+Example:
+
+```python
+@get('/hi')
+def hello(foo, bar=''):
+    if bar:
+        return 'Hi %s and %s!' % (foo, bar)
+    else:
+        return 'Hi %s!' % foo
+```
+
+When requesting `http://.../hi?foo=John&bar=Smith`, the response will be `Hi John Smith!`.
+
+In this example, the `foo` parameter is mandatory, and the `bar` parameter is optional since it has a default value.
+
+If a mandatory argument is missing, an Exception will be throw.
+
 
 ### Sessions
 
+Sessions are kept server side in memory and identified through a HTTP-only cookie with a `session_id`.
+
+The session data is simply a python dictionary:
+
+```python
+import bottle
+import canister
+from canister import session
+
+@get('/')
+def index():
+    if 'counter' in session.data:
+        session.data['counter'] += 1
+    else:
+        session.data['counter'] = 0
+    # ...
+```
+
+Since a server never knows when a user quits, sessions simply time out after some time.
+By default, they expire after an hour, but this can be fine tuned in the config:
+
+
+```ini
+[canister]
+
+# how long the session data will still be available after the last access, in seconds
+session_timout = 3600
+```
 
 ### Authentication
 
+Canister will automatically parse two kind of `Authorization` headers:
+- Basic authentication (for basic login/password)
+- Bearer token authentication (for OAuth2)
+
+See the example configuration above to see how it is configured.
+
+
+
 ### CORS
+
+If you have REST APIs, enabling CORS can be quite useful.
+
+### Security ABC
+
+* use HTTPS
+* be aware of CSRF
+* don't enable CORS if you don't need to

@@ -23,7 +23,7 @@ import time
 import math
 
 # this will contain id, user and data
-bottle.session = threading.local()
+session = threading.local()
 
 class TimedDict(dict):
     def __init__(self):
@@ -247,6 +247,8 @@ class Canister:
         
         def wrapper(*args, **kwargs):
             
+            global session
+            
             start = time.time()
             
             req = bottle.request
@@ -267,8 +269,8 @@ class Canister:
                 res.set_cookie('session_id', sid, secret=self.session_secret)
                 log.info('Session created: ' + sid)
             
-            bottle.session.sid = sid
-            bottle.session.data = data
+            session.sid = sid
+            session.data = data
             
             # thread name = <ip>-<session_id[0:6]>
             threading.current_thread().name = req.remote_addr + '-' + sid[0:6]
@@ -291,7 +293,7 @@ class Canister:
                     self.log.info('Logged in as: ' + str(user))
                     self.sessions.set(sid, user, data)
                     
-            bottle.session.user = user
+            session.user = user
             
             
             # args unpacking
