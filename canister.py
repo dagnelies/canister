@@ -70,14 +70,23 @@ class TimedDict(dict):
 
         
 def _buildLogger(config):
+    debug = config.get('canister.debug', True)
     level = config.get('canister.log_level', 'INFO')
     path = config.get('canister.log_path', './logs/')
     days = int( config.get('canister.log_days', '30') )
     log = logging.getLogger('canister')
-    if level.upper() not in ['DISABLED', 'FALSE', 'NONE']:
+    
+    if debug:
+        log.setLevel('DEBUG') 
+        h = logging.StreamHandler()
+    elif level != 'DISABLED':
         os.makedirs(path, exist_ok=True)
-        log.setLevel(level) 
+        log.setLevel(level)
         h = logging.handlers.TimedRotatingFileHandler( os.path.join(path, 'log'), when='midnight', backupCount=int(days))
+    else:
+        h = None
+        
+    if h:
         f = logging.Formatter('%(asctime)s %(levelname)-8s [%(threadName)s]   %(message)s')
         h.setFormatter( f )
         log.addHandler( h )
@@ -155,8 +164,11 @@ class SessionCache:
                 with self._lock:
                     n = self._cache.prune(timeout)
                     log.debug('%d expired sessions pruned' % n)
-            
-        cleaner = threading.Thread(name="SessionCleaner", target=prune)
+        
+        # Note Daemon threads are abruptly stopped at shutdown.
+        # Their resources (such as open files, database transactions, etc.) may not be released properly.
+        # Since these are "in memory" sessions, we don't care ...just be aware of it if you want to change that.
+        cleaner = threading.Thread(name="SessionCleaner", target=prune, daemon=True)
         cleaner.deamon=True
         cleaner.start()
     
@@ -223,7 +235,6 @@ class Canister:
         self.app = app
         self.log = log
         app.log = log
-        
         
         timeout = int(config.get('canister.session_timeout', '3600'))
         self.sessions = SessionCache(timeout=timeout)
@@ -305,6 +316,9 @@ class Canister:
                     
             result = callback(*args, **kwargs)
             
+            if session.user != user or session.data != data:
+                self.sessions.set(sid, session.user, session.data)
+                
             if self.cors:
                 res.headers['Access-Control-Allow-Origin'] = self.cors
             

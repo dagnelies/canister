@@ -1,5 +1,7 @@
 import sys
+# just for the tests, to fetch the development version of canister in the parent directory
 sys.path.insert(0, '..')
+
 import bottle
 import canister
 from canister import session
@@ -24,4 +26,4 @@ def index(foo=None):
         </pre>
     ''' % (session.sid, session.user, session.data, foo)
     
-app.run(host='0.0.0.0', debug=True)
+app.run(host='0.0.0.0')

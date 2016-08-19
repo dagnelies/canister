@@ -46,6 +46,9 @@ app.run()
 ```ini
 [canister]
 
+# ...due to limitations of bottle's plugin mechanism,
+debug=False
+
 # The logs directory
 log_path = ./logs/
 # Logging levels: DISABLED, DEBUG, INFO, WARNING, ERROR, CRITICAL
