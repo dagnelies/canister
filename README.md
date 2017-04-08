@@ -19,6 +19,7 @@ import canister
 from canister import session
 
 app = bottle.Bottle()
+app.config.load_config('<my-config-file-path>')
 app.install(canister.Canister())
 
 
