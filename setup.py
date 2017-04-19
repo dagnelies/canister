@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='canister',
-    version='1.4.3',
+    version='1.4.4',
     description='A bottle wrapper to provide logging, sessions and authentication.',
     url='https://github.com/dagnelies/canister',
     author='Arnaud Dagnelies',
