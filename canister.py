@@ -168,8 +168,8 @@ class SessionCache:
         # Note Daemon threads are abruptly stopped at shutdown.
         # Their resources (such as open files, database transactions, etc.) may not be released properly.
         # Since these are "in memory" sessions, we don't care ...just be aware of it if you want to change that.
-        cleaner = threading.Thread(name="SessionCleaner", target=prune, daemon=True)
-        cleaner.deamon=True
+        cleaner = threading.Thread(name="SessionCleaner", target=prune)
+        cleaner.daemon = True
         cleaner.start()
     
     def __contains__(self, sid):
