@@ -143,8 +143,8 @@ By default, they expire after an hour, but this can be fine tuned in the config:
 session_timout = 3600
 ```
 
-One more note about sessions: it's *in-memory*. Therefore sessions are lost when you stop, restart or crash the server.
-Also, for large data or long durability, use a DB, not sessions.  
+One more note about sessions: it's *in-memory*. Therefore sessions are lost when you stop/restart/crash the server.
+Also, for large data or long durability, use a DB, not sessions.
 
 
 ### Authentication
