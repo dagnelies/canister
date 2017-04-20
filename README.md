@@ -42,43 +42,6 @@ def index(foo=None):
 app.run()
 ```
 
-### Sample config file
-
-```ini
-[canister]
-
-# ...due to limitations of bottle's plugin mechanism,
-debug=False
-
-# The logs directory
-log_path = ./logs/
-# Logging levels: DISABLED, DEBUG, INFO, WARNING, ERROR, CRITICAL
-log_level = INFO
-# Log older than that will be deleted
-log_days = 30
-
-# how long the session data will still be available after the last access, in seconds
-session_timout = 3600
-
-# applies CORS to responses, write * to allow AJAX requests from anywhere
-#CORS = *
-
-# Basic auth
-auth_basic_username = alice
-auth_basic_encryption = clear
-auth_basic_password = my-secret
-
-# ...or alternatively, if you dislike putting your plain text password in the config:
-# auth_basic_encryption = sha256
-# auth_basic_password = 186ef76e9d6a723ecb570d4d9c287487d001e5d35f7ed4a313350a407950318e
-
-
-# Auth using JWT (for OAuth2)
-auth_client_id = ABC
-# accepted encodings are "clear", "base64std" or "base64url"
-auth_jwt_encoding = base64url
-auth_jwt_secret = my-secret
-```
 
 ### Logs
 
@@ -204,6 +167,46 @@ CORS = *
 ```
 
 If enabled through the config, they will be applied to ***all*** responses!
+
+
+### Sample config file
+
+```ini
+[canister]
+
+# ...due to limitations of bottle's plugin mechanism,
+debug=False
+
+# The logs directory
+log_path = ./logs/
+# Logging levels: DISABLED, DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_level = INFO
+# Log older than that will be deleted
+log_days = 30
+
+# how long the session data will still be available after the last access, in seconds
+session_timout = 3600
+
+# applies CORS to responses, write * to allow AJAX requests from anywhere
+#CORS = *
+
+# Basic auth
+auth_basic_username = alice
+auth_basic_encryption = clear
+auth_basic_password = my-secret
+
+# ...or alternatively, if you dislike putting your plain text password in the config:
+# auth_basic_encryption = sha256
+# auth_basic_password = 186ef76e9d6a723ecb570d4d9c287487d001e5d35f7ed4a313350a407950318e
+
+
+# Auth using JWT (for OAuth2)
+auth_client_id = ABC
+# accepted encodings are "clear", "base64std" or "base64url"
+auth_jwt_encoding = base64url
+auth_jwt_secret = my-secret
+```
+
 
 ### Security ABC
 
