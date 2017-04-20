@@ -143,6 +143,12 @@ By default, they expire after an hour, but this can be fine tuned in the config:
 session_timout = 3600
 ```
 
+One more note about sessions: it's *in-memory*. Therefore...
+
+* 10 visitors per hour, storing 200 bytes, with sessions kept for an hour = 2 kb in memory on average
+* 100 visitors per hour, storing 20 kb, with sessions kept for 24h = 48 Mb in memory on average
+* 1000 visitors per hour, storing 2 Mb, with sessions kept a year = Boom!!! (730 Gb in memory)
+
 ### Authentication
 
 Canister will automatically parse two kind of `Authorization` headers:
