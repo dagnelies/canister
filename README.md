@@ -177,11 +177,9 @@ If enabled through the config, they will be applied to ***all*** responses!
 # ...due to limitations of bottle's plugin mechanism,
 debug=False
 
-# The logs directory
+# Logs
 log_path = ./logs/
-# Logging levels: DISABLED, DEBUG, INFO, WARNING, ERROR, CRITICAL
 log_level = INFO
-# Log older than that will be deleted
 log_days = 30
 
 # how long the session data will still be available after the last access, in seconds
