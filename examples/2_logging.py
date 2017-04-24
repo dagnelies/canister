@@ -7,6 +7,7 @@ import canister
 from canister import session
 
 app = bottle.Bottle()
+app.config.load_config('2_logging.config')
 app.install(canister.Canister())
 
 
@@ -19,9 +20,8 @@ def index():
     app.log.critical('Big problem!')
     
     return '''<pre>
-    When "debug=true" (default) is written in the config, all logs go to the console.
-    If "debug=false" is set, they are written to a rotating log file.
-    This flag is also separate from bottle's "run(..., debug=True|False) since the plugin is initialized BEFORE bottle is run.
+    Without config, all logs go to the console.
+    If "log_path=..." is set, they are written to a rotating log file.
     Note that even when the log is written, the underlying WSGI server may still write to stdout, stderr or elsewhere.
     </pre>'''
     

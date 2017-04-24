@@ -70,27 +70,25 @@ class TimedDict(dict):
 
         
 def _buildLogger(config):
-    debug = config.get('canister.debug', True)
     level = config.get('canister.log_level', 'INFO')
-    path = config.get('canister.log_path', './logs/')
+    path = config.get('canister.log_path')
     days = int( config.get('canister.log_days', '30') )
     log = logging.getLogger('canister')
     
-    if debug:
-        log.setLevel('DEBUG') 
+    if level == 'DISABLED':
+        return log
+        
+    if not path:
         h = logging.StreamHandler()
-    elif level != 'DISABLED':
-        os.makedirs(path, exist_ok=True)
-        log.setLevel(level)
-        h = logging.handlers.TimedRotatingFileHandler( os.path.join(path, 'log'), when='midnight', backupCount=int(days))
     else:
-        h = None
-        
-    if h:
-        f = logging.Formatter('%(asctime)s %(levelname)-8s [%(threadName)s]   %(message)s')
-        h.setFormatter( f )
-        log.addHandler( h )
-        
+        os.makedirs(path, exist_ok=True)
+        h = logging.handlers.TimedRotatingFileHandler( os.path.join(path, 'log'), when='midnight', backupCount=int(days))
+    
+    log.setLevel(level)
+    f = logging.Formatter('%(asctime)s %(levelname)-8s [%(threadName)s]   %(message)s')
+    h.setFormatter( f )
+    log.addHandler( h )
+    
     return log
 
 
