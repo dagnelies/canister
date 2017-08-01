@@ -14,6 +14,8 @@ setup(
     scripts=['canister.py'],
     install_requires=[
         'bottle',
-        'PyJWT'
     ],
+    extras_require={
+        'jwt': ['PyJWT'],
+    },
 )

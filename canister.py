@@ -15,11 +15,17 @@ import threading
 import base64
 import os
 import os.path
-import jwt
 import hashlib
 import inspect
 import time
 import math
+
+try:
+    import jwt
+
+    HAS_JWT = True
+except ImportError:
+    HAS_JWT = False
 
 # this will contain id, user and data
 session = threading.local()
@@ -240,10 +246,12 @@ class Canister:
         self.auth_basic = _buildAuthBasic(config)
         if self.auth_basic:
             log.info('Basic authentication enabled.') 
-        
-        self.auth_jwt = _buildAuthJWT(config)
-        if self.auth_jwt:
-            log.info('JWT authentication enabled.')
+
+        if HAS_JWT:
+            self.auth_jwt = _buildAuthJWT(config)
+
+            if self.auth_jwt:
+                log.info('JWT authentication enabled.')
         
         self.cors = config.get('canister.CORS', None)
         if self.cors and self.cors.lower() == 'false':
@@ -293,8 +301,7 @@ class Canister:
                 
                 if self.auth_basic and tokens[0].lower() == 'basic':
                     user = self.auth_basic( tokens[1] )
-                    
-                elif self.auth_jwt and tokens[0].lower() == 'bearer':
+                elif HAS_JWT and self.auth_jwt and tokens[0].lower() == 'bearer':
                     user = self.auth_jwt( tokens[1] )
                     
                 if user:
