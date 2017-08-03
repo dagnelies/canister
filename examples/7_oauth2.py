@@ -1,29 +1,27 @@
-import sys
-# just for the tests, to fetch the development version of canister in the parent directory
-sys.path.insert(0, '..')
+#!/usr/bin/env python3
 
-import bottle
+# ab -n 1000 -c 10 http://localhost:8080/hello/world
+# ab -n 2 -c 2 http://127.0.0.1:8080/hello/world
+
+import sys
+sys.path.insert(0, '..')
 import canister
+import time
+import bottle
 from canister import session
 
 app = bottle.Bottle()
+app.config.load_config('7_oauth2.config')
 app.install(canister.Canister())
 
-
 @app.get('/')
-def index(foo=None):
-    if 'counter' in session.data:
-        session.data['counter'] += 1
-    else:
-        session.data['counter'] = 0
-        
+def index():
     return '''
         <pre>
             Session sid: %s
             Session user: %s
-            Session data: %s 
-            "?foo=...": %s
         </pre>
-    ''' % (session.sid, session.user, session.data, foo)
-    
+        Now try to send a brearer token in the Authorization header. 
+    ''' % (session.sid, session.user)
+
 app.run(host='0.0.0.0')

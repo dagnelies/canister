@@ -9,7 +9,17 @@ Canister is a simple plugin for bottle, providing:
 - authentication through basic auth or bearer token (OAuth2)
 - CORS for cross-domain REST APIs
 
-#### *Note: the `examples` directory is outdated.*
+### Install
+
+Usually (no dependency except *bottle*):
+
+`pip install canister`
+
+...or download the single file `canister.py`.
+
+However, if you plan to use JWT/OAuth2:
+
+`pip install canister[jwt]`
 
 ### Usage
 
@@ -157,7 +167,7 @@ See the example configuration above to see how it is configured.
 
 The user will then be available in `canister.session.user` for the duration of the session.
 In case of basic authentication, `user` will be the username.
-If it is JWT authentication, `user` will contain the profile with the requested attributes.
+If it is JWT authentication (OAuth2), `user` will contain the profile with the requested attributes.
 
 ### CORS
 
@@ -203,7 +213,7 @@ auth_basic_password = my-secret
 
 
 # Auth using JWT (for OAuth2)
-auth_client_id = ABC
+auth_jwt_client_id = ABC
 # accepted encodings are "clear", "base64std" or "base64url"
 auth_jwt_encoding = base64url
 auth_jwt_secret = my-secret
