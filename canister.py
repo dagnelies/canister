@@ -15,6 +15,7 @@ import threading
 import base64
 import os
 import os.path
+import hashlib
 import inspect
 import time
 import math
@@ -98,8 +99,6 @@ def _buildAuthBasic(config):
     if not username or not password:
         return None
         
-    import hashlib
-
     def validate(token):
         user, pwd = base64.b64decode(token).decode('utf-8').split(':', 1)
         if user != username:
