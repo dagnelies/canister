@@ -187,9 +187,11 @@ class SessionCache:
             self._cache[sid] = (user, data)
             
     
-    def create(self, user=None, data={}):
+    def create(self, user=None, data=None):
         sid = base64.b64encode(os.urandom(18)).decode('ascii')
         with self._lock:
+            if not data:
+                data = {}
             self._cache[sid] = (user, data)
         
         return (sid, user, data)
