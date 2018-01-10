@@ -76,16 +76,17 @@ def _buildLogger(config):
     if level == 'DISABLED':
         return log
         
-    if not path:
-        h = logging.StreamHandler()
-    else:
-        os.makedirs(path, exist_ok=True)
-        h = logging.handlers.TimedRotatingFileHandler( os.path.join(path, 'log'), when='midnight', backupCount=int(days))
-    
     log.setLevel(level)
-    f = logging.Formatter('%(asctime)s %(levelname)-8s [%(threadName)s]   %(message)s')
-    h.setFormatter( f )
-    log.addHandler( h )
+    if path is not False:
+        if not path:
+            h = logging.StreamHandler()
+        else:
+            os.makedirs(path, exist_ok=True)
+            h = logging.handlers.TimedRotatingFileHandler( os.path.join(path, 'log'), when='midnight', backupCount=int(days))
+        
+        f = logging.Formatter('%(asctime)s %(levelname)-8s [%(threadName)s]   %(message)s')
+        h.setFormatter( f )
+        log.addHandler( h )
     
     return log
 
